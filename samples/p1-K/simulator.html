@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script id="vertex-shader" type="x-shader/x-vertex">
+    attribute vec4 vPosition;
+    attribute vec3 vNormal;
+    attribute vec4 vLColor;
+    attribute vec4 vMColor;
+    attribute vec4 vDColor;
+    varying vec4 fColor;
+    uniform vec3 lighting;
+    uniform vec3 attenuation;
+    uniform vec3 lightDirection;
+    uniform vec4 colorOptions[12];
+    uniform vec3 shadingOptions[4];
+    uniform vec3 plane_location;
+    uniform vec3 heading;
+    uniform vec3 up;
+    uniform int backfacing;
+    uniform int shaderType;
+    uniform int discreteColors;
+    uniform float scale;
+    uniform bool ortho;
+
+    void main()
+    {
+        gl_PointSize = 2.0;
+        vec3 z_axis = normalize(heading);
+        vec3 x_axis = normalize(cross(up, z_axis));
+        vec3 y_axis = cross(z_axis, x_axis);
+
+        vec3 position;
+        position.x = vPosition.x;
+        position.y = vPosition.y;
+        position.z = vPosition.z;
+
+        vec3 normal = normalize(vNormal);
+        vec3 shading = shadingOptions[1];
+        shading.x = 0.2;
+        shading.y = 0.3;
+        shading.z = 0.3;
+
+        vec3 diff = plane_location - position;
+        float dist = dot(diff, diff);
+        dist = attenuation[0] + (attenuation[1] * dist)
+            + (attenuation[2] * dist * dist);
+
+        float f = 1.0 / tan(1.0 / 2.0);
+        float aspect_ratio = 1.0;
+        float near = -1.0;
+        float far = 1.0;
+        float range_inv = 1.0 / (near - far);
+
+        float ambient = shading[0] * lighting[0];
+        float diffuse = shading[1] *
+            max(dot(normalize(-1.0 * heading), normal), 0.0) * lighting[1];
+
+        vec3 reflect = (normalize(-1.0 * heading) + z_axis) * 0.5;
+        float specular = shading[2] *
+            max(pow(dot(reflect, normal), 1.0), 0.0) * lighting[2];
+
+        float intensity = ambient + diffuse + specular;
+
+        float angle = max(dot(normalize(-1.0 * heading), normal), 0.9);
+
+        float shade = angle * intensity;
+
+        int shadeNum = shade > 0.6 ? 1 : 2;
+
+        // These can be modified if desired.
+        float left = -2.0;
+        float right = 2.0;
+        float bottom = -2.0;
+        float top = 2.0;
+        float near_prime = 0.0;
+        float far_prime = 10.0;
+
+        // Orthographic projection, taken from the text.
+        mat4 ortho_proj = mat4(
+            2.0 / (right - left), 0.0, 0.0, 0.0,
+            0.0, 2.0 / -(bottom - top), 0.0, 0.0,
+            0.0, 0.0, -2.0 / -(far_prime - near_prime), 0.0,
+            -(left + right)/(right - left), -(top + bottom)/(top - bottom),
+                -(far_prime + near_prime)/(far_prime - near_prime), 1
+        );
+
+        // Column-major matrices.
+        mat4 t = mat4(
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            plane_location.x, plane_location.y, plane_location.z, 1.0
+        );
+
+        // Based on https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/
+            // WebGL_model_view_projection#Perspective_Matrix
+        mat4 new_perspective = mat4(
+            f/ aspect_ratio, 0.0, 0.0, 0.0,
+            0.0, f, 0.0, 0.0,
+            0.0, 0.0, (near + far) * range_inv, near * far * range_inv * 2.0,
+            0.0, 0.0, -0.5, 0.0
+        );
+
+        mat4 camera = mat4(
+            x_axis.x, y_axis.x, z_axis.x, 0.0,
+            x_axis.y, y_axis.y, z_axis.y, 0.0,
+            x_axis.z, y_axis.z, z_axis.z, 0.0,
+            -1.0 * dot(x_axis, plane_location),
+                -1.0 * dot(y_axis, plane_location),
+                -1.0 * dot(z_axis, plane_location), 1.0
+        );
+
+        gl_Position = vPosition;
+        float scaling = scale;
+        if (backfacing == 1) {
+            scaling = scaling * 1.008;
+        }
+        gl_Position = scaling * gl_Position;
+        gl_Position[3] = 1.0;
+        gl_Position = camera * gl_Position;
+
+        // Orthogonal projection
+        if (ortho)
+        {
+            gl_Position = ortho_proj * gl_Position;
+        } else
+        {
+            gl_Position = new_perspective * gl_Position;
+        }
+
+        if (shaderType != 2 && discreteColors == 1) {
+            if (shadeNum == 0) {
+                fColor = vLColor;
+            }
+            else if (shadeNum == 1) {
+                fColor = vMColor;
+            }
+            else {
+            fColor = vDColor;
+            }
+        }
+        else {
+            shade = shaderType == 2 ? 1.0 : max(shade, 0.3);
+            fColor = shade * vLColor;
+            fColor[3] = 1.0;
+        }
+    }
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+    precision mediump float;
+    varying vec4 fColor;
+    uniform vec4 bColor;
+    void main()
+    {
+
+    if (!gl_FrontFacing) {
+        gl_FragColor = fColor;
+    }
+    else {
+        gl_FragColor = bColor;
+    }
+    }
+</script>
+
+<script type="text/javascript" src="Common/webgl-utils.js"></script>
+<script type="text/javascript" src="Common/initShaders.js"></script>
+<script type="text/javascript" src="Common/MV.js"></script>
+<script type="text/javascript" src="simulator.js"></script>
+<script src="node_modules/quaternion/quaternion.js"></script>
+</head>
+
+<body>
+<canvas id="gl-canvas" width="512" height="512" tabindex=1>
+    Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+<br>
+<input type="checkbox" id='outline' name="outline" unchecked>Enable outline<br>
+<input type="checkbox" id='discreteColors'
+    name="discreteColors">Enable discreteColors<br>
+<select id="projectionType" size="2">
+    <option value="orthogonal">Parallel</option>
+    <option value="perspective" selected="true">Perspective</option>
+</select><br>
+<select id="shaderType" size="3">
+    <option value="flat">Flat</option>
+    <option value="smooth" selected="true">Smooth</option>
+    <option value="wireframe">Wireframe</option>
+</select>
+<br>
+<br>
+<h2>Controls</h2>
+<ul>
+    <li>Yaw: a/d keys or left/right arrow keys</li>
+    <li>Pitch: w/s keys or up/down arrow keys</li>
+    <li>Roll: q/e keys</li>
+    <li>Increase speed: u key</li>
+    <li>Decrease speed: i key</li>
+    <li>Pause: space bar</li>
+    <li>(If controls do not respond, click on canvas)</li>
+</ul>
+
+<h2>Bonus Features (extra credit)</h2>
+<ul>
+    <li>Smooth terrain generation</li>
+    <li>Seam removal between tiles of terrain</li>
+    <li>Cartoon shading with "Enable discreteColors"</li>
+    <li>Outlines with "Enable outline"</li>
+    <li>View-dependent shading (the plane is the light source)</li>
+    <li>Pausing (space bar)</li>
+</ul>
+
+<h2>Additional Notes to Grader</h2>
+<ul>
+    <li>We are aware that the shader casts a shadow along the edge
+        of tiles (this has to do with how we calculate normals on tile edges).
+        The professor said not to worry about the boundary between tiles on
+        Workplace, so we believe that no points should be deducted for this.
+    </li>
+    <li>You may notice a small amount of lag when new tiles are loaded in,
+        but the professor said that this is okay on Workplace, so we believe
+        that no points should be deducted for this.
+    </li>
+    <li>The parallel view will take a little bit of time before it starts moving
+        becuase it's loading in the surroundings. It has a wider viewing angle
+        in order to be comparable to the perspective view, so we need to load
+        more things. We also believe no points should be deducted for this, for
+        a similar reason to the above point.
+    </li>
+</ul>
+</body>
+</html>

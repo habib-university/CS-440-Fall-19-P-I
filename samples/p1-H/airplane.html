@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="style.css">
+<script id="vertex-shader" type="x-shader/x-vertex">
+  attribute vec4 vPosition;
+  attribute vec4 vColor;
+  varying vec4 fColor;
+  uniform mat4 projection;
+  uniform vec3 movement;
+
+  void
+  main()
+  {
+    mat4 trans = mat4(
+      1.0, 0.0, 0.0, 0.0,
+      0.0, 1.0, 0.0, 0.0,
+      0.0, 0.0, 1.0, 0.0,
+      movement[0], movement[1], movement[2], 1.0
+    );
+
+      gl_Position = projection * trans * vPosition;
+      fColor = vColor;
+  }
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+  precision mediump float;
+  varying vec4 fColor;
+  void
+  main()
+  {
+      gl_FragColor = fColor;
+  }
+</script>
+
+<script type="text/javascript" src="Common/webgl-utils.js"></script>
+<script type="text/javascript" src="Common/initShaders.js"></script>
+<script type="text/javascript" src="Common/MV.js"></script>
+<script type="text/javascript" src="Common/map_point.js"></script>
+<script type="text/javascript" src="airplane.js"></script>
+</head>
+
+<body>
+<div>
+    <canvas id="gl-canvas" width="512" height="512">
+        Oops ... your browser doesn't support the HTML5 canvas element
+        </canvas>
+</div>
+
+<div class = "buttons">
+<br>
+
+<button class="button" id="pauseButton">Pause</button>
+<button class="button" id="playButton">Play</button>
+<button class="button" id="AutoButton">Auto-pilot (On/Off)</button>
+<br>
+
+<button class="button" id="Wireframe">Wireframe</button> 
+<button  class="button"id="Flat">Flat</button>
+<button class="button" id="Smooth">Smooth</button>
+<br>
+
+Viewing
+<br>
+<button class="button" id="Parallel">Parallel</button>
+<button class="button" id="Perspective">Perspective</button>
+<div>
+Parallel FOV
+<br>
+<input type="range" min="140" max="190" value="150" class="slider" id="parallelFOV">
+</div>
+
+<div>
+Perspective FOV
+<br>
+<input type="range" min="55" max="75" value="60" class="slider" id="perspectiveFOV">
+</div>
+
+</div>
+<div class = "controls">
+<p> Controls </p>
+<p> Pitch : W key, S key </p>
+<p> Yaw : Q key, E key </p>
+<p> Roll : A key, D key </p>
+<p>Speed : up key, down key</p>
+</div>
+</body>
+</html>

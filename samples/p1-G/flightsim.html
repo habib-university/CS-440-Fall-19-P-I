@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<p> </p>
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+attribute  vec4 vPosition;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+
+uniform vec3 thetaArray;
+
+
+void main()
+{
+    gl_Position = projectionMatrix*modelViewMatrix*vPosition;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+uniform vec4 fColor;
+
+void
+main()
+{
+    gl_FragColor = fColor;
+}
+</script>
+
+<script type="text/javascript" src="Common/webgl-utils.js"></script>
+<script type="text/javascript" src="Common/initShaders.js"></script>
+<script type="text/javascript" src="Common/MV.js"></script>
+<script type="text/javascript" src="flightsim.js"></script>
+
+<body>
+Press b to toggle perspective/parallel view.
+<p> </p>
+Press w to increase pitch.
+Press s to decrease pitch.
+<p> </p>
+Press a to increase yaw.
+Press d to decrease yaw.
+<p> </p>
+Press q to increase roll.
+Press e to decrease roll.
+<p> </p>
+Press t to toggle fill/wireframe.
+Press t to toggle smooth shading.
+<p> </p>
+Press up arrow to increase speed.
+Press down arrow to decrease speed.
+<p> </p>
+Press z to for wider view.
+Press x for narrower view.
+<p> </p>
+Press c for taller view.
+Press v for shorter view.
+<p> </p>
+
+
+<canvas id="gl-canvas" width="512" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+
+
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script id="vertex-shader" type="x-shader/x-vertex">
+      attribute vec4 vPosition;
+      attribute vec4 vColor;
+      varying vec4 fColor;
+
+      uniform mat4 modelViewMatrix;
+      uniform int smooth;
+
+      vec4 getMaterialAmbient(float height) {
+        vec4 white = vec4(1.0, 1.0, 1.0, 1);
+        vec4 brown = vec4(0.36, 0.25, 0.20, 1);
+        vec4 green = vec4(0.4, 1.0, 0.4, 1);
+        vec4 blue = vec4(0.0, 0.4, 1.0, 1);
+        float s1 =  0.45;
+        float s2 = 0.1;
+        float s3 = 0.05;
+        if (height > s1) {
+          return white;
+        } else if (height > s2) {
+          return brown;
+        } else if (height > s3) {
+          return green;
+        } else {
+          return blue;
+        }
+      }
+      
+      void main() {
+
+        gl_Position = modelViewMatrix * vPosition;
+
+        if (smooth == 1){
+          fColor = getMaterialAmbient( vPosition.y) ;
+        }
+        else {
+          fColor = vColor;
+        }
+
+        fColor.a = 1.0;
+      }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
+      varying vec4 fColor;
+
+      void main() {
+        gl_FragColor = fColor;
+      }
+    </script>
+
+    <script type="text/javascript" src="Common/webgl-utils.js"></script>
+    <script type="text/javascript" src="Common/initShaders.js"></script>
+    <script type="text/javascript" src="Common/MV.js"></script>
+    <script type="text/javascript" src="flightsim.js"></script>
+    <script type="text/javascript" src="perlin.js"></script>
+  </head>
+
+  <body>
+
+    <canvas id="gl-canvas" width="512" height="512">
+      Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+    <br><br>
+    <b>Toggle Modes</b>
+    <br>
+    <button id="parallelPerspective">Toggle Parallel or Perspective</button>
+    <button id="wireframe">Toggle wireframe or solid</button>
+    <input id="shading" type="button" value="Toggle Flat or Smooth">
+    <br><br>
+    <b>Speed</b>
+    <br>
+    <button id="speedup">Speed up</button>
+    <button id="slowdown">Slow down</button>
+    <br><br>
+    <b>Variable Yaw, Pitch, and Roll</b>
+    <br>
+    <button id="yawLeft">Yaw left</button>
+    <button id="yawRight">Yaw right</button>
+    <button id="pitchUp">Pitch up</button>
+    <button id="pitchDown">Pitch down</button>
+
+    <button id="rollCounterclockwise">Roll counterclockwise</button>
+    <button id="rollClockwise">Roll clockwise</button>
+    <br><br>
+    <div>
+      <b>Variable View Parameters (Parallel):</b>
+      <br>
+      Top <input id="orthTop" type="range" min="2" max="5" step=".01" value="5">
+      Bottom <input id="orthBottom" type="range" min="-3" max="-1" step=".01"
+        value="-2">
+      <br>
+      Left <input id="orthLeft" type="range" min="-5" max="0" step=".01"
+        value="-2">
+      Right <input id="orthRight" type="range" min="0.01" max="5.01" step=".01"
+        value="2">
+      <br>
+      Near <input id="orthNear" type="range" min="0" max="2" step=".01"
+        value="0">
+      Far <input id="orthFar" type="range" min="3" max="7" step=".01" value="5">
+    </div>
+    <br>
+    <b>Audio Control</b>
+    <br><br>
+    <audio controls>
+    <source src="airplane.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+    </audio>
+    <p>Audio recorded by Mike Koenig: http://soundbible.com/1587-Airplane-Fly-Over.html</p>
+    <br><br>
+  </body>
+</html>

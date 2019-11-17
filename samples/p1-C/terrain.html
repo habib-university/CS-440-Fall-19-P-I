@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 vPosition; 
+        uniform vec3 theta;
+        uniform vec3 distance;
+        attribute vec4 vColor;
+        varying vec4 fColor;
+        uniform mat4 modelView;
+        void main() {
+            fColor = vColor;
+
+            vec3 d = vec3(distance);
+
+            mat4 modelView = mat4(1.0, 0.0, 0.0, 0.0, 
+                                    0.0, 1.0, 0, 0.0, 
+                                    0.0, 0.0, 1.0, -1.0, 
+                                    0.0, 0.0, 0.0, 1.0 );
+
+            mat4 flyby = mat4(1.0, 0.0, 0.0, 0.0,
+                            0.0, 1.0, 0.0, 0.0,
+                            0.0, 0.0, 1.0, -d.z,
+                            0.0, 0.0, 0.0, 1.0);
+            
+            vec3 angles = radians( theta ); 
+            vec3 c = cos( angles ); 
+            vec3 s = sin( angles );
+            
+            gl_PointSize = 1.0;
+            mat4 rx = mat4( 1.0, 0.0, 0.0, 0.0, 
+                            0.0, c.x, s.x, 0.0, 
+                            0.0, -s.x, c.x, 0.0, 
+                            0.0, 0.0, 0.0, 1.0 ); 
+
+            mat4 ry = mat4(c.y, 0.0, -s.y, 0.0,
+                            0.0, 1.0, 0.0, 0.0,
+                            s.y, 0.0, c.y, 0.0,
+                            0.0, 0.0, 0.0, 1.0);
+
+            mat4 rz = mat4(c.z, -s.z, 0.0, 0.0,
+                    s.z, c.z, 0.0, 0.0,
+                    0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0);
+
+            gl_Position = modelView * flyby * rx * ry * rz * vPosition; 
+        }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 fColor;
+    
+        void
+        main()
+        {
+            gl_FragColor = fColor;
+        }
+    </script>
+
+    <script type="text/javascript" src="./common/webgl-utils.js"></script>
+    <script type="text/javascript" src="./common/initShaders.js"></script>
+    <script type="text/javascript" src="./common/MV.js"></script>
+    <script type="text/javascript" src="perrin.js"></script>
+    <script type="text/javascript" src="terrain.js"></script>
+</head>
+
+<body>
+    <canvas id="gl-canvas" width="1024" height="512">
+        Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+    <br>
+
+    <button id="PitchAxis">Rotate Pitch Axis</button>
+    <button id="RollAxis">Rotate Roll Axis</button>
+    <button id="YawAxis">Rotate Yaw Axis</button>
+    <button id="wireFraming">Wire Framing</button>
+    <button id="flatShading">Flat Shading</button>
+    <button id="smoothShading">Smooth Shading</button>
+</body>
+
+</html>
